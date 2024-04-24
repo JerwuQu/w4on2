@@ -1,0 +1,7 @@
+/target
+/local
+zig-cache/
+zig-out/
+*.log
+*.w4on2
+.vscode/c_cpp_properties.json

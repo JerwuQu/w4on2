@@ -1,0 +1,22 @@
+[package]
+name = "w4on2_plugin"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "w4on2_plugin"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "w4on2_plugin_standalone"
+path = "src/standalone.rs"
+
+[dependencies]
+w4on2_shared = { path = "../shared" }
+nih_plug = { git = "https://github.com/jerwuqu/nih-plug.git", branch = "master", features = ["assert_process_allocs", "standalone"] }
+nih_plug_egui = { git = "https://github.com/jerwuqu/nih-plug.git", branch = "master" }
+rfd = "0.14.1"
+native-dialog = "0.7.0"
+serde = { version = "1.0.198", features = ["derive"] }

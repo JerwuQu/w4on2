@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+    "plugin",
+    "cli",
+]
+
+# get smol - https://github.com/johnthagen/min-sized-rust
+#[profile.release]
+#strip = true
+#lto = true

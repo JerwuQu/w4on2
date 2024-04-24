@@ -1,0 +1,20 @@
+[package]
+name = "w4on2_shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.82"
+lazy_static = "1.4.0"
+log = "0.4.21"
+midly = "0.5.3"
+serde = { version = "1.0.197", features = ["derive"] }
+toml = "0.8.12"
+wav = "1.0.0"
+
+[build-dependencies]
+cc = "1.0"
+bindgen = "0.69.4"
+
+[dev-dependencies]
+rand = "0.8.5"

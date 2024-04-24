@@ -1,0 +1,34 @@
+name: Build Plugin
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+jobs:
+  release:
+    name: Release - ${{ matrix.platform.target }}
+    strategy:
+      matrix:
+        platform:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+          strip: true
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.target }}
+          path: |
+            target/${{ matrix.platform.target }}/release/w4on2_cli.exe
+            target/${{ matrix.platform.target }}/release/w4on2_plugin.dll
+            target/${{ matrix.platform.target }}/release/w4on2_plugin_standalone.exe

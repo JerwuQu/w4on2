@@ -1,0 +1,13 @@
+{
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.rulers": [120],
+  "editor.formatOnSave": false,
+  "[rust]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "rust-analyzer.linkedProjects": ["./Cargo.toml"],
+  "files.associations": { "*.h": "c" },
+  "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix"
+}

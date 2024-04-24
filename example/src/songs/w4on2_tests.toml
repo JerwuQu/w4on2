@@ -1,0 +1,35 @@
+[[channels]]
+channel = {"pulse1" = "12.5%"}
+volume = 150
+adsr = [0, 0, 255, 3]
+arpeggio = {"rate" = 1}
+
+[[channels]]
+channel = "triangle"
+volume = 230
+adsr = [0, 10, 200, 5]
+portamento = 5
+
+[[channels]]
+channel = "noise"
+volume = 200
+
+[[channels]]
+channel = {"pulse2" = "25%"}
+adsr = [0, 10, 200, 5]
+pitch_env = [48, 5]
+
+[[channels]]
+channel = {"pulse2" = "50%"}
+
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
+[[channels]]
