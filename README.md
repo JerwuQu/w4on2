@@ -18,6 +18,10 @@ If you do not have a DAW, w4on2 overall might not be the right fit for you, but 
 
 One important thing to keep in mind is to only ever have one instance of the w4on2 plugin in a project to remain accurate with the WASM-4 APU.
 
+## Showcase/tutorial
+
+[![w4on2 showcase/tutorial](https://i.imgur.com/kZppK6T.png)](https://www.youtube.com/watch?v=4VezbcXImcE)
+
 ## Installation
 
 w4on2 has mostly been tested on Windows, but it should work on other platforms too.
