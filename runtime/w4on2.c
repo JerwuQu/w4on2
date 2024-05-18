@@ -69,7 +69,7 @@ void w4on2_rt_init(w4on2_rt_t *rt, w4on2_tone_t tone, void *userdata)
 void w4on2_rt_tick(w4on2_rt_t *rt)
 {
     // Play each channel
-    for (uint8_t ch_i = 0; ch_i < W4ON2_CHANNEL_COUNT; ch_i++) { 
+    for (uint8_t ch_i = 0; ch_i < W4ON2_CHANNEL_COUNT; ch_i++) {
         w4on2_channel_t *ch = &rt->channels[ch_i];
         if (ch->active_track_i >= W4ON2_TRACK_COUNT) {
             continue;
@@ -124,8 +124,10 @@ void w4on2_rt_tick(w4on2_rt_t *rt)
             to_pitch += w4on2_triangle((0x3fff + (uint32_t)(porta_ticks + 1) * ((uint32_t)track->vib_speed << 6)) % 0xffff, track->vib_depth << 2);
 
             // Convert from pitch to WASM-4 bent MIDI notes to WASM-4 frequency slope
-            uint32_t w4_freq_param = (((from_pitch >> 8) | (from_pitch << 8)) & 0xffff) | ((((to_pitch >> 8) | (to_pitch << 8)) & 0xffff) << 16);
-            
+            uint32_t w4_freq_param =
+                ((((uint32_t)from_pitch >> 8) | ((uint32_t)from_pitch << 8)) & 0xffff)
+                | (((((uint32_t)to_pitch >> 8) | ((uint32_t)to_pitch << 8)) & 0xffff) << 16);
+
             // Continous linear tone
             // Using the Decay part of ADSR is most flexible for playing any linear envelope since peak and sustain are absolute values in WASM-4.
             // The downside is WASM-4 defaults peak volume to 100 when it is 0, so we use Attack specifically for that case (since it goes from zero.)
