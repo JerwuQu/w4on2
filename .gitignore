@@ -1,6 +1,6 @@
 /target
 /local
-zig-cache/
+.zig-cache/
 zig-out/
 *.log
 *.w4on2
