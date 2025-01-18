@@ -29,7 +29,7 @@ Please submit a PR if you get something working!
 
 ### Windows 
 
-Download: For now, [download a build from Github Actions](https://github.com/JerwuQu/w4on2/actions?query=branch%3Amaster+is%3Asuccess).
+Download: [Download a release](https://github.com/JerwuQu/w4on2/releases) or [a Github Actions build](https://github.com/JerwuQu/w4on2/actions?query=branch%3Amaster+is%3Asuccess).
 
 If using VST3, put into `C:\Program Files\Common Files\VST3`.
 
