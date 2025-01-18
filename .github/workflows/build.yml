@@ -32,3 +32,11 @@ jobs:
             target/${{ matrix.platform.target }}/release/w4on2_cli.exe
             target/${{ matrix.platform.target }}/release/w4on2_plugin.dll
             target/${{ matrix.platform.target }}/release/w4on2_plugin_standalone.exe
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          files: |
+            target/${{ matrix.platform.target }}/release/w4on2_cli.exe
+            target/${{ matrix.platform.target }}/release/w4on2_plugin.dll
+            target/${{ matrix.platform.target }}/release/w4on2_plugin_standalone.exe
