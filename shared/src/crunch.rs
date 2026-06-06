@@ -44,6 +44,7 @@ fn crunchy_chunky<T: PartialEq + Debug + Clone>(
         for outer_ei in 0..outer.chunk.len() {
             let mut contenders = HashMap::<usize, Vec<PatternMatch>>::new();
             for (inner_i, inner) in chunks.iter().enumerate() {
+                #[allow(clippy::needless_range_loop)] // better here
                 for inner_ei in 0..inner.chunk.len() {
                     let max_length = min(inner.chunk.len() - inner_ei, outer.chunk.len() - outer_ei);
                     for match_i in 0..max_length {
@@ -264,7 +265,7 @@ pub fn uncrunch<T: Clone>(dict: &[Vec<T>], tracks: &[Vec<usize>]) -> Vec<Vec<T>>
 
 #[cfg(test)]
 mod tests {
-    use rand::Rng;
+    use rand::RngExt;
 
     use crate::crunch::*;
 
@@ -272,7 +273,7 @@ mod tests {
     fn test_uncrunch() {
         assert_eq!(
             vec![vec![1, 1, 1, 0, 0, 0], vec![0, 0, 0, 1, 1, 1]],
-            uncrunch(&vec![vec![0, 0, 0], vec![1, 1, 1]], &vec![vec![1, 0], vec![0, 1]])
+            uncrunch(&[vec![0, 0, 0], vec![1, 1, 1]], &[vec![1, 0], vec![0, 1]])
         );
     }
 
@@ -320,7 +321,7 @@ mod tests {
     #[test]
     fn test_crunch_fuzz() {
         for _ in 0..128 {
-            let buf: Vec<u8> = (0..16).map(|_| rand::thread_rng().gen_range(0..8)).collect();
+            let buf: Vec<u8> = (0..16).map(|_| rand::rng().random_range(0..8)).collect();
             println!("{:?}", buf);
             let input = vec![buf];
             let (dict, usages) = crunch(input.clone(), 99, 1);
@@ -330,7 +331,7 @@ mod tests {
 
     #[test]
     fn test_crunch_deterministic() {
-        let buf: Vec<u8> = (0..16).map(|_| rand::thread_rng().gen_range(0..8)).collect();
+        let buf: Vec<u8> = (0..16).map(|_| rand::rng().random_range(0..8)).collect();
         println!("{:?}", buf);
         let input = vec![buf];
         let (dict_1, usages_1) = crunch(input.clone(), 16, 1);

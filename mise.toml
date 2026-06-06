@@ -1,0 +1,19 @@
+[tools]
+rust = "stable"
+zig = "0.16"
+
+[tasks.standalone]
+run = "cargo run --release --bin w4on2_plugin_standalone -- --midi-input 'VMPK Output:out 128:0'"
+
+[tasks.wsl-cp-vst3]
+run = [
+    "cargo build --release --target x86_64-pc-windows-gnu --lib",
+    "cp target/x86_64-pc-windows-gnu/release/w4on2_plugin.dll /mnt/c/Program Files/Common Files/VST3/w4on2_plugin.vst3",
+]
+
+[tasks.linux-cp-vst3]
+run = [
+    "cargo build --release --lib",
+    "mkdir -p ~/.vst3/w4on2.vst3/Contents/x86_64-linux",
+    "cp target/release/libw4on2_plugin.so ~/.vst3/w4on2.vst3/Contents/x86_64-linux/w4on2.so"
+]

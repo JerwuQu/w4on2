@@ -1,7 +1,7 @@
 [package]
 name = "w4on2_plugin"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,8 +15,9 @@ path = "src/standalone.rs"
 
 [dependencies]
 w4on2_shared = { path = "../shared" }
-nih_plug = { git = "https://github.com/jerwuqu/nih-plug.git", branch = "master", features = ["assert_process_allocs", "standalone"] }
-nih_plug_egui = { git = "https://github.com/jerwuqu/nih-plug.git", branch = "master" }
-rfd = "0.14.1"
-native-dialog = "0.7.0"
-serde = { version = "1.0.198", features = ["derive"] }
+nice-plug = { version = "0.1", features = ["assert_process_allocs", "standalone"] }
+nice-plug-egui = "0.1"
+egui = "0.34"
+rfd = "0.17"
+native-dialog = "0.9"
+serde = { version = "1", features = ["derive"] }

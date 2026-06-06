@@ -146,7 +146,6 @@ channel = "noise"
 - Friendly names for channels in plugin/TOML: `nickname` field exists but need some way to do popups since baseview-egui text input is b0rk.
 - `bounce` function in plugin.
 - Cruncher currently gives different sizes on each invocation. Something is not fully efficient. Look into? Not hugely important.
-- Sane logging. Currently no way to disable `nih_log`. Fix in `nih_log` fork?
 - Ability to automate parameters via MIDI CC messages.
 - There could be a recording feature in the plugin for even simpler export, though it would require allocations in `process` and would overall be finicky to use.
 - Make sure terminology is sane so it's easy to understand what everything means.

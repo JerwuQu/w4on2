@@ -1,10 +1,7 @@
-use native_dialog::MessageDialog;
-use nih_plug::prelude::*;
-use nih_plug_egui::{
-    create_egui_editor,
-    egui::{self, containers::Frame, emath, Align, Layout, RichText},
-    EguiState,
-};
+use egui::{Align, Layout, RichText, containers::Frame, emath};
+use native_dialog::{MessageDialogBuilder, MessageLevel};
+use nice_plug::prelude::*;
+use nice_plug_egui::{EguiSettings, EguiState, create_egui_editor};
 use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -14,8 +11,8 @@ use std::{
     sync::{Arc, Mutex, RwLock},
 };
 use w4on2_shared::SONG_TRACK_CONFIG_DEFAULT as STCD;
-use w4on2_shared::{optimal_bpm, runtime::*, Channel, PulseDuty, SongTrackConfig, TrackEvent};
-use w4on2_shared::{wasm4_apu, MidiEventMapper, SongConfig};
+use w4on2_shared::{Channel, PulseDuty, SongTrackConfig, TrackEvent, optimal_bpm, runtime::*};
+use w4on2_shared::{MidiEventMapper, SongConfig, wasm4_apu};
 use widgets::Knob;
 
 mod widgets;
@@ -118,11 +115,12 @@ impl Default for W4ON2Params {
 
 fn simple_error(text: String) {
     std::thread::spawn(move || {
-        MessageDialog::new()
-            .set_type(native_dialog::MessageType::Error)
+        MessageDialogBuilder::default()
+            .set_level(MessageLevel::Error)
             .set_title("w4on2 error")
             .set_text(&text)
-            .show_alert()
+            .alert()
+            .show()
             .unwrap();
     });
 }
@@ -138,7 +136,7 @@ fn num_ctrl<Num: emath::Numeric>(
     ui.allocate_ui(egui::vec2(50.0, 150.0), |ui| {
         Frame::group(ui.style()).show(ui, |ui| {
             ui.with_layout(egui::Layout::top_down_justified(Align::Center), |ui| {
-                ui.label(label);
+                ui.add(egui::Label::new(label).wrap_mode(egui::TextWrapMode::Extend));
                 *changed |= ui.add(Knob::new(label, val, range, Some(def))).changed();
             });
         });
@@ -200,23 +198,27 @@ fn channel_ctrl_ui(ui: &mut egui::Ui, ch: &mut SongTrackConfig) -> bool {
         .show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label("WASM-4 Channel");
-                egui::ComboBox::from_id_source("channel")
+                egui::ComboBox::from_id_salt("channel")
                     .selected_text(ch.channel.to_string())
                     .show_ui(ui, |ui| {
-                        Channel::types().iter().fold(false, |a, t| {
-                            ui.selectable_value(&mut ch.channel, t.clone(), t.to_string()).clicked() || a
-                        })
+                        let mut clicked = false;
+                        for t in Channel::types() {
+                            clicked |= ui.selectable_value(&mut ch.channel, t.clone(), t.to_string()).clicked();
+                        }
+                        clicked
                     })
                     .inner
                     .unwrap_or(false)
                     || match ch.channel {
                         Channel::Pulse1(ref mut dc) | Channel::Pulse2(ref mut dc) => {
-                            egui::ComboBox::from_id_source("duty")
+                            egui::ComboBox::from_id_salt("duty")
                                 .selected_text(dc.to_string())
                                 .show_ui(ui, |ui| {
-                                    PulseDuty::types()
-                                        .iter()
-                                        .fold(false, |a, t| ui.selectable_value(dc, *t, t.to_string()).clicked() || a)
+                                    let mut clicked = false;
+                                    for t in PulseDuty::types() {
+                                        clicked |= ui.selectable_value(dc, t, t.to_string()).clicked();
+                                    }
+                                    clicked
                                 })
                                 .inner
                                 .unwrap_or(false)
@@ -353,32 +355,33 @@ impl Plugin for W4ON2 {
 
     fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
         let params = self.params.clone();
-        let gen = self.generator.clone();
+        let gn = self.generator.clone();
         let convert_status = self.convert_status.clone();
         create_egui_editor(
             EguiState::from_size(600, 400), // force size
             (UIMode::Compose, 0),
-            |_, _| {},
-            move |egui_ctx, _setter, (selected_mode, selected_channel)| {
-                egui::CentralPanel::default().show(egui_ctx, |ui| {
+            EguiSettings::default(),
+            |_, _, _| {},
+            move |ui, _setter, _queue, (selected_mode, selected_channel)| {
+                egui::CentralPanel::default().show_inside(ui, |ui| {
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             ui.horizontal(|ui| {
                                 if ui.button("Load TOML...").clicked() {
-                                    let t_gen = gen.clone();
+                                    let t_gen = gn.clone();
                                     let conf_t = params.song_config.clone();
                                     std::thread::spawn(move || {
                                         let file = FileDialog::new()
                                             .add_filter("toml", &["toml"])
                                             .set_directory("/")
                                             .pick_file();
-                                        if let Some(f) = file {
-                                            if let Some(new_conf) = load_toml_path(&f) {
-                                                let gen = &mut *t_gen.lock().unwrap();
-                                                let conf = &mut *conf_t.write().unwrap();
-                                                gen.as_mut().unwrap().reload_instruments(&new_conf);
-                                                *conf = new_conf;
-                                            }
+                                        if let Some(f) = file
+                                            && let Some(new_conf) = load_toml_path(&f)
+                                        {
+                                            let generator = &mut *t_gen.lock().unwrap();
+                                            let conf = &mut *conf_t.write().unwrap();
+                                            generator.as_mut().unwrap().reload_instruments(&new_conf);
+                                            *conf = new_conf;
                                         }
                                     });
                                 }
@@ -398,7 +401,7 @@ impl Plugin for W4ON2 {
 
                             ui.with_layout(Layout::top_down(Align::Max), |ui| {
                                 let sample_rate = {
-                                    let gen_lock = gen.lock().unwrap();
+                                    let gen_lock = gn.lock().unwrap();
                                     gen_lock.as_ref().map(|g| g.sample_rate).unwrap_or(0)
                                 };
                                 ui.label(
@@ -410,7 +413,7 @@ impl Plugin for W4ON2 {
                                         }),
                                 );
                                 let (midi_bpm, opti_bpm) =
-                                    gen.lock().unwrap().as_ref().map(|g| g.timing).unwrap_or((0.0, 0.0));
+                                    gn.lock().unwrap().as_ref().map(|g| g.timing).unwrap_or((0.0, 0.0));
                                 ui.label(
                                     RichText::new(format!(
                                         "BPM: {:.3} | Closest Optimal BPM: {:.3}",
@@ -464,7 +467,7 @@ impl Plugin for W4ON2 {
                                     //}
                                 });
                                 if channel_ctrl_ui(ui, &mut song_conf.channels[*selected_channel]) {
-                                    gen.lock().unwrap().as_mut().unwrap().reload_instruments(song_conf);
+                                    gn.lock().unwrap().as_mut().unwrap().reload_instruments(song_conf);
                                 }
                                 // TODO: show channel sound bars to the right :]
                             }
@@ -535,10 +538,10 @@ impl Plugin for W4ON2 {
                                                 .add_filter("w4on2", &["w4on2"])
                                                 .set_directory("/")
                                                 .save_file();
-                                            if let Some(f) = file {
-                                                if let ConvertStatus::Ok(_, data) = &*conv_t.lock().unwrap() {
-                                                    save_w4on2(&f, data);
-                                                }
+                                            if let Some(f) = file
+                                                && let ConvertStatus::Ok(_, data) = &*conv_t.lock().unwrap()
+                                            {
+                                                save_w4on2(&f, data);
                                             }
                                         });
                                     }
@@ -578,8 +581,8 @@ impl Plugin for W4ON2 {
         context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         let mut gen_lock = self.generator.lock().unwrap();
-        let gen = gen_lock.as_mut().unwrap();
-        let apu = unsafe { &mut *gen.apu };
+        let gn = gen_lock.as_mut().unwrap();
+        let apu = unsafe { &mut *gn.apu };
 
         let mut next_event = context.next_event();
         for (sample_id, channel_samples) in buffer.iter_samples().enumerate() {
@@ -590,7 +593,7 @@ impl Plugin for W4ON2 {
                 }
 
                 // Handle event
-                gen.event_buffer.clear();
+                gn.event_buffer.clear();
                 match event {
                     NoteEvent::NoteOn {
                         note,
@@ -600,25 +603,23 @@ impl Plugin for W4ON2 {
                     } => {
                         //info!("[note-on] key:{note} | vel:{velocity} | ch:{channel}");
                         let vel = (velocity * 127.0) as u8;
-                        gen.mapper.note_on(&mut gen.event_buffer, channel, note, vel);
+                        gn.mapper.note_on(&mut gn.event_buffer, channel, note, vel);
                     }
                     NoteEvent::NoteOff { note, channel, .. } => {
                         //info!("[note-off] key:{note} | ch:{channel}");
-                        gen.mapper.note_off(&mut gen.event_buffer, channel, note);
+                        gn.mapper.note_off(&mut gn.event_buffer, channel, note);
                     }
-                    NoteEvent::MidiCC { channel, cc, value, .. } => {
-                        if cc == control_change::PAN_MSB {
-                            gen.mapper.pan(channel, (value * 127.0) as u8);
-                        }
+                    NoteEvent::MidiCC { channel, cc, value, .. } if cc == control_change::PAN_MSB => {
+                        gn.mapper.pan(channel, (value * 127.0) as u8);
                     }
                     _ => {}
                 }
                 let event_ch = event.channel().unwrap_or(0);
-                for e in &gen.event_buffer {
-                    gen.serialize_buffer.clear();
-                    e.serialize_into(&mut gen.serialize_buffer);
+                for e in &gn.event_buffer {
+                    gn.serialize_buffer.clear();
+                    e.serialize_into(&mut gn.serialize_buffer);
                     unsafe {
-                        w4on2_rt_feed_event(&mut gen.engine, event_ch, gen.serialize_buffer.as_ptr());
+                        w4on2_rt_feed_event(&mut gn.engine, event_ch, gn.serialize_buffer.as_ptr());
                     }
                 }
 
@@ -626,15 +627,15 @@ impl Plugin for W4ON2 {
             }
 
             // WASM-4 tick
-            let prev_tick = gen.sample.checked_sub(1).map(|v| v * 60 / (gen.sample_rate as usize));
-            let tick = gen.sample * 60 / (gen.sample_rate as usize);
+            let prev_tick = gn.sample.checked_sub(1).map(|v| v * 60 / (gn.sample_rate as usize));
+            let tick = gn.sample * 60 / (gn.sample_rate as usize);
             let new_ticks = prev_tick.map(|t| tick - t).unwrap_or(1);
             // NOTE: If `new_ticks` increased by more than one tick we are no longer sample-perfect.
             // If that happened, the computer likely had a CPU spike or the audio buffer is too large, so it's not hugely important.
             // Though still... TODO: rewrite code to be sample-perfect.
             for _ in 0..new_ticks {
                 unsafe {
-                    w4on2_rt_tick(&mut gen.engine);
+                    w4on2_rt_tick(&mut gn.engine);
                 }
                 apu.tick();
             }
@@ -648,7 +649,7 @@ impl Plugin for W4ON2 {
                     // trace!("sample: #{i}, val: {}", *sample);
                 }
             }
-            gen.sample += 1;
+            gn.sample += 1;
         }
 
         // update timing
@@ -656,7 +657,7 @@ impl Plugin for W4ON2 {
         let midi_num = context.transport().time_sig_numerator.unwrap_or(4);
         let midi_denom = context.transport().time_sig_numerator.unwrap_or(4);
         let (opti_bpm, _) = optimal_bpm(midi_bpm, midi_num, midi_denom);
-        gen.timing = (midi_bpm, opti_bpm);
+        gn.timing = (midi_bpm, opti_bpm);
 
         ProcessStatus::KeepAlive
     }
@@ -684,5 +685,5 @@ impl Vst3Plugin for W4ON2 {
     ];
 }
 
-nih_export_clap!(W4ON2);
-nih_export_vst3!(W4ON2);
+nice_export_clap!(W4ON2);
+nice_export_vst3!(W4ON2);

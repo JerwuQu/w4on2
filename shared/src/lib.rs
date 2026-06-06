@@ -4,10 +4,9 @@ mod crunch;
 pub mod runtime;
 pub mod wasm4_apu;
 
-use std::{ffi::c_void, fmt::Display};
+use std::{ffi::c_void, fmt::Display, sync::LazyLock};
 
 use anyhow::Result;
-use lazy_static::lazy_static;
 use runtime::*;
 use serde::{Deserialize, Serialize};
 
@@ -155,9 +154,7 @@ impl Default for SongTrackConfig {
         }
     }
 }
-lazy_static! {
-    pub static ref SONG_TRACK_CONFIG_DEFAULT: SongTrackConfig = SongTrackConfig::default();
-}
+pub static SONG_TRACK_CONFIG_DEFAULT: LazyLock<SongTrackConfig> = LazyLock::new(SongTrackConfig::default);
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct SongConfig {

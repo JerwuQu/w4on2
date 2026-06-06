@@ -1,9 +1,14 @@
 [workspace]
 resolver = "2"
 members = [
+    "shared",
     "plugin",
     "cli",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
 
 # get smol - https://github.com/johnthagen/min-sized-rust
 #[profile.release]

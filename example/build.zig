@@ -3,15 +3,17 @@ const std = @import("std");
 pub fn build(b: *std.Build) !void {
     const exe = b.addExecutable(.{
         .name = "cart",
-        .root_source_file = b.path("src/main.zig"),
-        .target = b.resolveTargetQuery(.{
-            .cpu_arch = .wasm32,
-            .os_tag = .freestanding,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = b.resolveTargetQuery(.{
+                .cpu_arch = .wasm32,
+                .os_tag = .freestanding,
+            }),
+            .optimize = .ReleaseSmall, // b.standardOptimizeOption(.{}),
         }),
-        .optimize = .ReleaseSmall, // b.standardOptimizeOption(.{}),
     });
-    exe.addIncludePath(b.path("../runtime/"));
-    exe.addCSourceFile(.{
+    exe.root_module.addIncludePath(b.path("../runtime/"));
+    exe.root_module.addCSourceFile(.{
         .file = b.path("../runtime/w4on2.c"),
         .flags = &.{"-D__W4ON2_WASM4_TRACEF"},
     });

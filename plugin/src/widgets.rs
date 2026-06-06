@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, ops::RangeInclusive};
 
-use nih_plug_egui::egui::{emath::Numeric, *};
+use egui::{emath::Numeric, *};
 
 pub struct Knob<'a> {
     id: Id,
@@ -37,11 +37,7 @@ impl<'a> Widget for Knob<'a> {
             const PADDING: f32 = 4.0;
             let (mut resp, painter) = ui.allocate_painter(
                 vec2((self.radius + PADDING) * 2.0, (self.radius + PADDING) * 2.0),
-                Sense {
-                    click: false,
-                    drag: true,
-                    focusable: false,
-                },
+                Sense::drag(),
             );
             let rect = resp.rect;
 
@@ -117,7 +113,7 @@ impl<'a> Widget for Knob<'a> {
             } else {
                 let shifted = ui.input(|i| i.modifiers.shift);
                 let scroll_delta = if resp.hovered() {
-                    ui.input(|i| i.raw_scroll_delta.y)
+                    ui.input(|i| i.smooth_scroll_delta.y)
                 } else {
                     0.0
                 };

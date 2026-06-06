@@ -7,7 +7,7 @@ const song = @embedFile("songs/w4on2_tests.w4on2");
 var runtime: C.w4on2_rt_t = undefined;
 var player: C.w4on2_player_t = undefined;
 
-fn tone(frequency: u32, duration: u32, volume: u32, flags: u32, _: ?*anyopaque) callconv(.C) void {
+fn tone(frequency: u32, duration: u32, volume: u32, flags: u32, _: ?*anyopaque) callconv(.c) void {
     w4.tone(frequency, duration, volume, flags);
 }
 

@@ -11,6 +11,7 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("../runtime/w4on2.h")
+        .derive_default(true)
         .generate()
         .unwrap();
     let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());

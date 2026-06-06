@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use log::*;
 use midly::{MetaMessage, MidiMessage, Smf, TrackEventKind};
 
@@ -57,10 +57,10 @@ impl MidiTiming {
         }
     }
     fn set_tempo(&mut self, tempo: MidlyTempo) -> Result<()> {
-        if let Some(cur_tempo) = &self.tempo {
-            if *cur_tempo != tempo {
-                bail!("tempo changes (currently) not allowed");
-            }
+        if let Some(cur_tempo) = &self.tempo
+            && *cur_tempo != tempo
+        {
+            bail!("tempo changes (currently) not allowed");
         }
         self.tempo = Some(tempo);
         if self.timesig.is_some() {
@@ -69,10 +69,10 @@ impl MidiTiming {
         Ok(())
     }
     fn set_timesig(&mut self, timesig: MidlyTimeSig) -> Result<()> {
-        if let Some(cur_timesig) = &self.timesig {
-            if *cur_timesig != timesig {
-                bail!("time signature changes (currently) not allowed");
-            }
+        if let Some(cur_timesig) = &self.timesig
+            && *cur_timesig != timesig
+        {
+            bail!("time signature changes (currently) not allowed");
         }
         self.timesig = Some(timesig);
         if self.tempo.is_some() {
@@ -105,12 +105,11 @@ fn midi_to_track_events(def: &SongConfig, smf: Smf, stretch: bool) -> Result<Vec
                         MidiMessage::NoteOff { key, .. } => {
                             mapper.note_off(&mut event_buffer, channel.as_int(), key.as_int());
                         }
-                        MidiMessage::Controller { controller, value } => {
+                        MidiMessage::Controller { controller, value }
                             // 10 is pan
-                            if controller == 10 {
+                            if controller == 10 => {
                                 mapper.pan(channel.as_int(), value.as_int());
                             }
-                        }
                         _ => {}
                     }
                     if !event_buffer.is_empty() {
@@ -155,13 +154,12 @@ fn collapse_tracks(tracks: Vec<Vec<TrackEvent>>) -> Vec<Vec<TrackEvent>> {
         .map(|t| {
             let mut new_track = Vec::<TrackEvent>::with_capacity(t.len());
             for e in t {
-                if let TrackEvent::NotesOff = e {
-                    if let Some(pe) = new_track.last_mut() {
-                        if let TrackEvent::Delta(d) = pe {
-                            *pe = TrackEvent::DeltaNotesOff(*d);
-                            continue;
-                        }
-                    }
+                if let TrackEvent::NotesOff = e
+                    && let Some(pe) = new_track.last_mut()
+                    && let TrackEvent::Delta(d) = pe
+                {
+                    *pe = TrackEvent::DeltaNotesOff(*d);
+                    continue;
                 }
                 new_track.push(e);
             }

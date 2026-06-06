@@ -46,9 +46,17 @@ pub fn bounce_pcm(w4on2_bytes: &[u8]) -> Vec<i16> {
 }
 
 pub fn write_wav<W: std::io::Write + std::io::Seek>(pcm: Vec<i16>, w: &mut W) -> Result<()> {
-    Ok(wav::write(
-        wav::Header::new(wav::WAV_FORMAT_PCM, 2, WASM4_SAMPLE_RATE, 16),
-        &wav::BitDepth::Sixteen(pcm),
+    let mut writer = hound::WavWriter::new(
         w,
-    )?)
+        hound::WavSpec {
+            channels: 2,
+            sample_rate: WASM4_SAMPLE_RATE,
+            bits_per_sample: 16,
+            sample_format: hound::SampleFormat::Int,
+        },
+    )?;
+    for sample in pcm {
+        writer.write_sample(sample)?;
+    }
+    Ok(writer.finalize()?)
 }
